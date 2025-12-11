@@ -12,7 +12,7 @@
       templates = {
         default = {
           description = "flake-utils template";
-          path = "./template/flake-utils";
+          path = ./flake-utils-template;
         };
       };
 
