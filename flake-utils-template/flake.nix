@@ -1,6 +1,5 @@
 {
   description = "flake-utils template";
-
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
