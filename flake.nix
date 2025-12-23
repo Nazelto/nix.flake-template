@@ -1,4 +1,3 @@
-#TODO: 更新为flake part
 {
   description = "A very basic flake";
 
@@ -24,6 +23,10 @@
           flake-parts = {
             description = "flake-parts-template";
             path = ./flake-parts-template;
+          };
+          rust-template = {
+            description = "rust-template";
+            path = ./rust-template;
           };
         };
       };

@@ -1,5 +1,5 @@
 {
-  description = "Rust 智能开发环境 (自动适配是否初始化)";
+  description = "Nix Rust 开发环境";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
@@ -11,6 +11,10 @@
     crane = {
       url = "github:ipetkov/crane";
     };
+    pre-commit-hooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -20,6 +24,7 @@
       flake-utils,
       fenix,
       crane,
+      pre-commit-hooks,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -30,7 +35,7 @@
         craneLib = (crane.mkLib pkgs).overrideToolchain toolchain;
 
         # ============================================================
-        # 🟢 智能检测逻辑
+        # 🟢 检测逻辑
         # Nix 只能看到被 git add 的文件，所以这里实际上是在检测
         # "Cargo.toml 是否在 Git 中"
         # ============================================================
@@ -69,8 +74,24 @@
         # ============================================================
         # 🐚 开发环境
         # ============================================================
+        # 如果项目还没被创建 就没有检查hooks
+        checks = {
+          # 在进行git提交前进行一系列检查
+          pre-commit-checks =
+            if isProjectInitialized then
+
+              pre-commit-hooks.lib.${system}.run {
+                inherit (commonArgs) src;
+                hooks = {
+                  #Rust
+                  rustfmt.enable = true;
+                  clippy.enable = true;
+                };
+              }
+            else
+              null;
+        };
         devShells.default = pkgs.mkShell {
-          # 🟢 智能切换：
           # 如果项目已初始化，继承 myCrate 的依赖
           # 如果没初始化，给一个空列表，避免报错
           inputsFrom = if isProjectInitialized then [ myCrate ] else [ ];
@@ -83,6 +104,8 @@
           shellHook =
             if isProjectInitialized then
               ''
+                # pre-commit-hooks
+                ${self.checks.${system}.pre-commit-checks.shellHook}
                 echo "✅ 检测到 Rust 项目，构建环境已加载 (Crane mode)"
               ''
             else
