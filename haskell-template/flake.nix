@@ -27,8 +27,10 @@
           cabal-fmt
           hoogle
         ];
+        myapp = hsPkgs.callCabal2nix "myapp" ./. { };
       in
       {
+        package.default = myapp;
         devShells.default = pkgs.mkShell {
           packages =
             with pkgs;
