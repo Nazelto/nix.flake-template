@@ -28,6 +28,10 @@
             description = "rust-template";
             path = ./rust-template;
           };
+	  haskell-template = {
+	   description = "haskell-template";
+	   path = ./haskell-template;
+	  };
         };
       };
     };
