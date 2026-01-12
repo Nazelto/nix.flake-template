@@ -28,10 +28,14 @@
             description = "rust-template";
             path = ./rust-template;
           };
-	  haskell-template = {
-	   description = "haskell-template";
-	   path = ./haskell-template;
-	  };
+          haskell-template = {
+            description = "haskell-template";
+            path = ./haskell-template;
+          };
+          cpp-template = {
+            description = "xmake.cpp-template";
+            path = ./cpp-template;
+          };
         };
       };
     };
