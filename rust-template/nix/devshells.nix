@@ -7,18 +7,15 @@
   rustConfig,
   ...
 }:
-
+let
+  dep = (builtins.attrValues { inherit (pkgs) git cargo-cross cargo-watch; }) // [ toolchain ];
+in
 {
   devShells.default = pkgs.mkShell {
     # 如果项目已初始化，继承构建依赖
     inputsFrom = if isProjectInitialized then [ rustConfig.packages ] else [ ];
 
-    packages = [
-      toolchain
-      pkgs.git
-      #pkgs.cargo-edit # 可选：cargo add/rm/upgrade
-      #pkgs.cargo-watch # 可选：cargo watch
-    ];
+    packages = dep;
 
     shellHook =
       if isProjectInitialized then
