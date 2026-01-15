@@ -8,7 +8,7 @@
   ...
 }:
 let
-  dep = (builtins.attrValues { inherit (pkgs) git cargo-cross cargo-watch; }) // [ toolchain ];
+  dep = (builtins.attrValues { inherit (pkgs) git cargo-cross cargo-watch; }) ++ [ toolchain ];
 in
 {
   devShells.default = pkgs.mkShell {
