@@ -1,16 +1,15 @@
 {
-  inputs,
+  pchLib,
   system,
   isProjectInitialized,
   rustConfig,
   ...
 }:
-
 {
   checks = {
     pre-commit-checks =
       if isProjectInitialized then
-        inputs.pre-commit-hooks.lib.${system}.run {
+        pchLib.run {
           # 使用 rustConfig 中的 commonArgs.src
           inherit (rustConfig.commonArgs) src;
 

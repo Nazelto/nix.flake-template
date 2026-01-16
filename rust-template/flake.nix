@@ -21,68 +21,83 @@
   };
 
   outputs =
-    inputs@{ self, flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
+    inputs@{
+      self,
+      flake-parts,
+      crane,
+      fenix,
+      ...
+    }:
+    flake-parts.lib.mkFlake { inherit inputs; } (
+      top@{
+        config,
+        lib,
+        inputs,
+        ...
+      }:
+      {
+        systems = [
+          "x86_64-linux"
+          "aarch64-linux"
+          "x86_64-darwin"
+          "aarch64-darwin"
+        ];
 
-      perSystem =
-        {
-          config,
-          self',
-          inputs',
-          pkgs,
-          system,
-          ...
-        }:
-        let
-          # ============================================================
-          # 🔧 基础工具链
-          # ============================================================
-          toolchain = inputs.fenix.packages.${system}.stable.toolchain;
+        perSystem =
+          {
+            config,
+            self',
+            inputs',
+            pkgs,
+            system,
+            ...
+          }:
+          let
+            pchLib = inputs.pre-commit-hooks.lib.${system};
+            toolchain = inputs'.fenix.packages.stable.toolchain;
+            craneLib = (inputs.crane.mkLib pkgs).overrideToolchain toolchain;
+            isProjectInitialized = (builtins.pathExists ./Cargo.toml) && (builtins.pathExists ./Cargo.lock);
+            rustConfig =
+              if isProjectInitialized then
+                import ./nix/rust.nix {
+                  inherit
+                    config
+                    pkgs
+                    toolchain
+                    craneLib
+                    ; # 👈 传递 craneLib
+                }
+              else
+                null;
 
-          # ============================================================
-          # 🟢 检测逻辑
-          # ============================================================
-          isProjectInitialized = (builtins.pathExists ./Cargo.toml) && (builtins.pathExists ./Cargo.lock);
+          in
+          {
+            _module.args = {
+              inherit
+                pchLib
+                toolchain
+                isProjectInitialized
+                rustConfig
+                ;
+            };
 
-          # ============================================================
-          # 🦀 Rust 构建配置（原 args.nix）
-          # ============================================================
-          rustConfig =
-            if isProjectInitialized then
-              import ./nix/rust.nix {
-                inherit config pkgs toolchain;
-                crane = inputs.crane;
-              }
-            else
-              null;
-
-        in
-        {
-          # ============================================================
-          # 📤 向所有模块传递参数
-          # ============================================================
-          _module.args = {
-            inherit
-              toolchain
-              isProjectInitialized
-              rustConfig
-              ;
+            imports = [
+              ./nix/packages.nix
+              ./nix/devshells.nix
+              ./nix/checks.nix
+            ];
           };
 
-          # ============================================================
-          # 📥 导入模块
-          # ============================================================
-          imports = [
-            ./nix/packages.nix
-            ./nix/devshells.nix
-            ./nix/checks.nix
-          ];
-        };
-    };
+        flake =
+          let
+            nixpkgs = inputs.nixpkgs;
+          in
+          {
+            bundlers = nixpkgs.lib.genAttrs [ "x86_64-linux" ] (
+              system: import ./nix/bundle.nix { inherit nixpkgs system; }
+            );
+
+          };
+      }
+    );
 }
