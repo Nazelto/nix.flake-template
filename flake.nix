@@ -36,6 +36,14 @@
             description = "xmake.cpp-template";
             path = ./cpp-template;
           };
+          python = {
+            description = "pyrgon nix flake template";
+            path = ./python;
+          };
+          go = {
+            description = "golang nix flake template";
+            path = ./go;
+          };
         };
       };
     };

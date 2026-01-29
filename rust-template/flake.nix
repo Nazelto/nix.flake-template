@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    systems.url = "github:nix-systems/nix-systems";
 
     fenix = {
       url = "github:nix-community/fenix";
@@ -23,9 +24,11 @@
   outputs =
     inputs@{
       self,
+      nixpkgs,
       flake-parts,
       crane,
       fenix,
+      systems,
       ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } (
@@ -36,13 +39,7 @@
         ...
       }:
       {
-        systems = [
-          "x86_64-linux"
-          "aarch64-linux"
-          "x86_64-darwin"
-          "aarch64-darwin"
-        ];
-
+        systems = inputs.nixpkgs.lib.genAttrs (import inputs.systems);
         perSystem =
           {
             config,
